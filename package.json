@@ -1,0 +1,32 @@
+{
+    "name": "getbankhiddenipproxy",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon index.js",
+        "tool": "nodemon tool.js",
+        "format": "prettier --write ."
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^1.7.3",
+        "child_process": "^1.0.2",
+        "colors": "^1.4.0",
+        "crypto": "^1.0.1",
+        "dayjs": "^1.11.13",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "https-proxy-agent": "^7.0.5",
+        "mongoose": "^8.5.2",
+        "node-cron": "^3.0.3",
+        "node-telegram-bot-api": "^0.66.0",
+        "nodemon": "^3.1.4"
+    },
+    "devDependencies": {
+        "prettier": "^3.5.0"
+    }
+}

@@ -1,0 +1,109 @@
+require('dotenv').config();
+require('./node-cron/index.js');
+const IDCHAT = process.env.ID_CHATBOT;
+const bot = require('./botTele/bot');
+const connectDB = require('./config/connectMongoDB');
+const { sleep, sendMessageRunDone, clearFile, getProxies, clearAccountProcessed, sendMessageTele, getDateTimeCurrent } = require('./common/helper');
+const { sunWinFunction } = require('./function/sunwin.function');
+const { gemWinFunction } = require('./function/gemwin.function');
+const { getBankBet39Function } = require('./function/bet39.function');
+const { b52FuctionLogin } = require('./function/b52.function');
+const { rikFuctionLogin } = require('./function/rik.function.js');
+const { iwinFuctionLogin } = require('./function/iwin.function.js');
+const { nohuFuctionLogin } = require('./function/nohu.function.js');
+const getbank = require('./model/getbank.js');
+const { hitFunctionLogin } = require('./function/hit.function.js');
+
+async function runTask() {
+    const [proxyTinh, proxyXoay, banks] = await Promise.all([
+        getProxies('proxy.txt', false),
+        getProxies('proxy-rotating.txt', false),
+        getbank.find(),
+        clearAccountProcessed(),
+        sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent())
+    ]);
+    console.log('Có dữ liệu trong cơ sở dữ liệu: ', banks.length);
+
+    try {
+        b52FuctionLogin(banks, proxyXoay);
+        rikFuctionLogin(banks, proxyXoay);
+        // // gemwin();
+        // // sunwin();
+        hitFunctionLogin(banks, proxyXoay);
+
+        //     // // iwinFuctionLogin(1, banks);
+        //     // // iwinFuctionLogin(2, banks);
+        //     // // iwinFuctionLogin(3, banks);
+        //     // // iwinFuctionLogin(4, banks);
+        //     // // iwinFuctionLogin(5, banks);
+        //     // // iwinFuctionLogin(6, banks);
+
+        //     // // nohuFuctionLogin(1, banks);
+        //     // // nohuFuctionLogin(2, banks);
+        //     // // nohuFuctionLogin(3, banks);
+        //     // // nohuFuctionLogin(4, banks);
+        //     // // nohuFuctionLogin(5, banks);
+        //     // // nohuFuctionLogin(6, banks);
+    } catch (error) {
+        console.log(`Error runTask: ${error?.message || 'runTask'}`);
+    }
+}
+
+async function bet39() {
+    try {
+        while (true) {
+            clearFile('bet39.txt');
+            await Promise.all([getBankBet39Function()]);
+            console.log('------------------------------------------------------\n');
+            await sendMessageRunDone('Bet39');
+            await sleep(0.5 * 60 * 1000);
+        }
+    } catch (error) {
+        console.log(`Error bet39: ${error?.message || 'bet39'}`);
+    }
+}
+async function gemwin() {
+    try {
+        while (true) {
+            clearFile('gemwin.txt');
+            await Promise.all([gemWinFunction()]);
+            console.log('------------------------------------------------------\n');
+            await sendMessageRunDone('GemWin');
+            await sleep(0.5 * 60 * 1000);
+        }
+    } catch (error) {
+        console.log(`Error gemwin: ${error?.message || 'gemwin'}`);
+    }
+}
+
+async function sunwin() {
+    try {
+        while (true) {
+            clearFile('sunwin.txt');
+            await Promise.all([sunWinFunction()]);
+            console.log('------------------------------------------------------\n');
+            await sendMessageRunDone('SunWin');
+            await sleep(0.5 * 60 * 1000);
+        }
+    } catch (error) {
+        console.log(`Error sunwin: ${error?.message || 'sunwin'}`);
+    }
+}
+
+if (require.main === module) {
+    try {
+        connectDB();
+        setTimeout(() => {
+            try {
+                clearFile();
+                runTask();
+            } catch (taskError) {
+                console.error('Lỗi khi chạy các công việc:', taskError);
+                bot.sendMessage(IDCHAT, 'Tool runTask lỗi');
+            }
+        }, 5000);
+    } catch (dbError) {
+        console.error('Lỗi khi kết nối cơ sở dữ liệu:', dbError);
+        bot.sendMessage(IDCHAT, 'Tool require.main === module lỗi');
+    }
+}
