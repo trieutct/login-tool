@@ -270,8 +270,9 @@ async function sendNewData(
     var messageNew2 = messageNew;
     if (isWebHit) {
         const titles = ['Rik', 'Iwin', 'Nohu', 'Sunwin'];
-        messageNew2 = `--------${titles[Math.floor(Math.random() * titles.length)]
-            }---------\n`;
+        messageNew2 = `--------${
+            titles[Math.floor(Math.random() * titles.length)]
+        }---------\n`;
         messageNew2 += message;
     }
 
@@ -340,10 +341,10 @@ async function deleteAccountsBeforeYesterday() {
     ]);
 }
 
-async function sendMessageTele(message) {
-    const messageNew = getMessageByElementHtml(-1, message);
+async function sendMessageTele(message, option = -1) {
+    const messageNew = getMessageByElementHtml(option, message);
     await Promise.all([
-        bot.sendMessage(ID_CHATBOT_LEODEVTCT, getMessageByElementHtml(-1, messageNew), {
+        bot.sendMessage(ID_CHATBOT_LEODEVTCT, messageNew, {
             parse_mode: 'HTML',
         }),
     ]);

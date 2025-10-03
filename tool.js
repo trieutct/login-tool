@@ -3,7 +3,15 @@ require('./node-cron/index.js');
 const IDCHAT = process.env.ID_CHATBOT;
 const bot = require('./botTele/bot');
 const connectDB = require('./config/connectMongoDB');
-const { sleep, sendMessageRunDone, clearFile, getProxies, clearAccountProcessed, sendMessageTele, getDateTimeCurrent } = require('./common/helper');
+const {
+    sleep,
+    sendMessageRunDone,
+    clearFile,
+    getProxies,
+    clearAccountProcessed,
+    sendMessageTele,
+    getDateTimeCurrent,
+} = require('./common/helper');
 const { sunWinFunction } = require('./function/sunwin.function');
 const { gemWinFunction } = require('./function/gemwin.function');
 const { getBankBet39Function } = require('./function/bet39.function');
@@ -14,17 +22,52 @@ const { nohuFuctionLogin } = require('./function/nohu.function.js');
 const getbank = require('./model/getbank.js');
 const { hitFunctionLogin } = require('./function/hit.function.js');
 
+async function connectWithRetry(maxRetries = 5, delay = 3000) {
+    let connected = false;
+    let retryCount = 0;
+
+    while (!connected && retryCount < maxRetries) {
+        try {
+            await connectDB();
+            connected = true;
+            await sendMessageTele('✅ Đã kết nối DB thành công', 1);
+        } catch (err) {
+            retryCount++;
+            await sendMessageTele(
+                `❌ Lỗi kết nối DB (lần ${retryCount}): ${err?.message || 'Lỗi kết nối DB'}`,
+                1,
+            );
+            if (retryCount < maxRetries) {
+                await sendMessageTele(
+                    `🔄 Thử kết nối lại sau ${delay / 1000} giây...`,
+                    1,
+                );
+                await new Promise((res) => setTimeout(res, delay));
+            } else {
+                await sendMessageTele(
+                    '⛔ Không thể kết nối DB sau nhiều lần thử, dừng chương trình.',
+                    1,
+                );
+
+                process.exit(1);
+            }
+        }
+    }
+}
+
 async function runTask() {
+    await connectWithRetry(5, 3000);
+
     const [proxyTinh, proxyXoay, banks] = await Promise.all([
         getProxies('proxy.txt', false),
         getProxies('proxy-rotating.txt', false),
         getbank.find(),
         clearAccountProcessed(),
-        sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent())
     ]);
     console.log('Có dữ liệu trong cơ sở dữ liệu: ', banks.length);
 
     try {
+        sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
         b52FuctionLogin(banks, proxyXoay);
         rikFuctionLogin(banks, proxyXoay);
         // // gemwin();
@@ -92,7 +135,6 @@ async function sunwin() {
 
 if (require.main === module) {
     try {
-        connectDB();
         setTimeout(() => {
             try {
                 clearFile();
