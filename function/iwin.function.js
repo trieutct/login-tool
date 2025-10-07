@@ -5,57 +5,81 @@ const {
     shuffleArray,
     getAccountsWeb,
     getProcessedAccounts,
-    getProxies,
     tachChuoi,
+    sleep,
 } = require('../common/helper');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 require('dotenv').config();
-const getbank = require('../model/getbank');
 const axios = require('axios');
 const iwinController = require('../controller/iwin.controller');
 
-async function iwinFuctionLogin(tool = 1, datatest = []) {
-    try {
-        const accounts = getAccountsWeb('iwin.txt', tool);
-        const accountsProcessed = getProcessedAccounts('iwin.txt', tool);
-        // Kiểm tra nếu accountsProcessed là mảng rỗng
-        const accountsFiltered =
-            accountsProcessed.length === 0
-                ? shuffleArray(accounts) // Lấy toàn bộ dữ liệu accounts
-                : shuffleArray(
-                      accounts.filter((item) => !accountsProcessed.includes(item)),
-                  );
-
-        const proxies = getProxies();
-        if (!accountsFiltered?.length || !proxies?.length) {
-            return;
+async function iwinFuctionLogin(datatest = [], proxies = []) {
+    const chunkArray = (array, chunkSize) => {
+        const result = [];
+        for (let i = 0; i < array.length; i += chunkSize) {
+            result.push(array.slice(i, i + chunkSize));
         }
+        return result;
+    };
 
-        for (let i = 0; i < accountsFiltered.length; i++) {
-            const account = accountsFiltered[i];
+    const runGetBank = async (accounts, proxies, index = 0) => {
+        for (let i = 0; i < accounts.length; i++) {
+            const account = accounts[i];
             const proxyString = proxies[Math.floor(Math.random() * proxies.length)];
             const { username, password } = tachChuoi(account);
             const token = await iwinController.login(
                 username,
                 password,
-                proxyString,
-                tool,
+                proxyString
             );
             if (token) {
                 while (true) {
-                    const res = await getBankPlayIwin(token, proxyString, datatest, tool);
+                    const res = await getBankPlayIwin(token, proxyString, datatest, index);
                     if (!res) {
                         break;
                     }
                 }
             }
         }
-    } catch (error) {
-        console.log(`PlayIwin-tool${tool} lỗi iwinFuctionLogin`);
+    }
+
+    const getAccountsProcessed = (accounts = [], accountsProcessed = []) => {
+        const data = !accountsProcessed?.length
+            ? shuffleArray(accounts)
+            : shuffleArray(accounts.filter((item) => !accountsProcessed.includes(item)));
+        return data;
+    };
+
+    while (true) {
+        try {
+            const accounts = getAccountsWeb('iwin.txt');
+            const accountsProcessed = getProcessedAccounts('iwin.txt');
+            if (!proxies?.length) {
+                continue;
+            }
+    
+            const accountsChunks = chunkArray(accounts, accounts?.length / 30);
+                const runPromises = accountsChunks.map((accountsChunk, index) =>
+                    runGetBank(
+                        getAccountsProcessed(accountsChunk, accountsProcessed),
+                        proxies,
+                        index + 1,
+                    ),
+                );
+    
+                await Promise.all(runPromises);
+        } catch (error) {
+            console.log(`PlayIwin lỗi iwinFuctionLogin: ${error?.message || error?.response?.data?.message || error}`);
+            continue;
+        }
+        await sleep(1000);
     }
 }
 
-async function getBankPlayIwin(tokentx, proxyString, datatest, tool = 1) {
+const OFFICIAL_BANKS = ['BIDV', 'VPbank', 'Vietbank', 'VietinBank', 'VCB', 'Techcombank'];
+const OTHER_BANKS = ['Eximbank', 'ACB', 'NamABank', 'MBbank', 'DongA', 'NCB'];
+
+async function getBankPlayIwin(tokentx, proxyString, datatest, index = 0) {
     let listStatus = [];
     try {
         const { data: status } = await axios.post(
@@ -75,18 +99,9 @@ async function getBankPlayIwin(tokentx, proxyString, datatest, tool = 1) {
             },
         );
         if (status?.code === 200) {
-            const banksOffical = [
-                'BIDV',
-                'VCB',
-                'Techcombank',
-                'PVcombank',
-                'VietinBank',
-                'Vietbank',
-                'VPbank',
-            ];
             listStatus = shuffleArray(
                 status.rows
-                    .filter((item) => banksOffical?.includes(item.bankcode))
+                    .filter((item) => (index % 2 === 0 ? OFFICIAL_BANKS?.includes(item.bankcode) : !OTHER_BANKS?.includes(item.bankcode)))
                     .map((item) => item.bankcode),
             );
         }
@@ -110,7 +125,7 @@ async function getBankPlayIwin(tokentx, proxyString, datatest, tool = 1) {
                     const bankItem = data.rows;
                     if (bankItem) {
                         console.log(
-                            `Co bankItem PlayIwin-tool${tool} ${bankItem.account_no}`,
+                            `Co bankItem PlayIwin-index${index}: ${bankItem.bank_name} ${bankItem.account_no}`,
                         );
                         const dataCurrent = datatest.find(
                             (item) =>
@@ -118,8 +133,8 @@ async function getBankPlayIwin(tokentx, proxyString, datatest, tool = 1) {
                                 item.account_name === bankItem.account_name,
                         );
                         if (!dataCurrent) {
-                            var messageNew = `PlayIwin-lg${tool}`;
-                            console.log(`PlayIwin-tool${tool} có data mới`);
+                            var messageNew = `PlayIwin-LG`;
+                            console.log(`PlayIwin-index:${index} có data mới`);
                             await sendNewData(
                                 messageNew,
                                 bankItem.account_name,
@@ -129,13 +144,6 @@ async function getBankPlayIwin(tokentx, proxyString, datatest, tool = 1) {
                                 proxyString,
                                 'play-iwin',
                             );
-                            // await getbank({
-                            //     code_bank: bankItem.bank_code,
-                            //     account_name: bankItem.account_name,
-                            //     account_no: bankItem.account_no,
-                            //     branch_name: bankItem.bank_name,
-                            //     type: 'play-iwin',
-                            // }).save();
                         }
                     } else {
                         console.log('Không có bankItem getBankPlayIwin');

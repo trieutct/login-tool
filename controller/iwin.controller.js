@@ -81,7 +81,7 @@ class hitClubController {
         }
     }
 
-    async login(username, password, proxyUrl, tool = 1) {
+    async login(username, password, proxyUrl) {
         try {
             const url = 'https://getquayaybiai.gwyqinbg.com/user/login.aspx';
             const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
@@ -129,8 +129,10 @@ class hitClubController {
                     await this.updateFullName(proxyUrl, fullName, token);
                 }
                 const account = `${username}|${password}`;
-                await writeAccountProcessed(account, 'iwin.txt', tool);
+                await writeAccountProcessed(account, 'iwin.txt');
                 return token;
+            }else{
+                console.log(`Play Iwin lỗi login Iwin: ${response?.data?.message}`);
             }
             return null;
         } catch (error) {

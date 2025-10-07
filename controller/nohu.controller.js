@@ -71,7 +71,7 @@ class noHuController {
         }
     }
 
-    async login(username, password, proxyUrl, tool = 1) {
+    async login(username, password, proxyUrl) {
         try {
             const url = 'https://gatqueization.jeckatis.com/user/login.aspx';
             const agent = new HttpsProxyAgent(proxyUrl);
@@ -120,11 +120,14 @@ class noHuController {
                     await this.updateFullName(proxyUrl, fullName, token);
                 }
                 const account = `${username}|${password}`;
-                await writeAccountProcessed(account, 'nohu.txt', tool);
+                await writeAccountProcessed(account, 'nohu.txt');
                 return token;
+            }else{
+                console.log(`Nohu lỗi login nohu: ${response?.data?.message}`);
             }
             return null;
         } catch (error) {
+            console.log(`Nohu lỗi login nohu ${error}`);
             return null;
         }
     }

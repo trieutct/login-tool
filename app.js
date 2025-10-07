@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
-let child;
+const cron = require('node-cron');
 
+let child;
 async function startApp() {
     if (child) {
         child.kill();
@@ -14,6 +15,6 @@ async function startApp() {
 // Chạy lần đầu ngay khi start scheduler
 startApp();
 
-setInterval(async () => {
+cron.schedule("0 */2 * * *", () => {
     startApp();
-}, 3 * 60 * 60 * 1000); // 3 giờ = 10800000 ms
+});

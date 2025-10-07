@@ -4,57 +4,79 @@ const {
     headersCommon,
     getAccountsWeb,
     getProcessedAccounts,
-    getProxies,
     tachChuoi,
     shuffleArray,
+    sleep,
 } = require('../common/helper');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 require('dotenv').config();
 const axios = require('axios');
 const nohuController = require('../controller/nohu.controller');
 
-async function nohuFuctionLogin(tool = 1, datatest = []) {
-    try {
-        const accounts = getAccountsWeb('nohu.txt', tool);
-        const accountsProcessed = getProcessedAccounts('nohu.txt', tool);
-        // Kiểm tra nếu accountsProcessed là mảng rỗng
-        const accountsFiltered =
-            accountsProcessed.length === 0
-                ? shuffleArray(accounts) // Lấy toàn bộ dữ liệu accounts
-                : shuffleArray(
-                      accounts.filter((item) => !accountsProcessed.includes(item)),
-                  );
+async function nohuFuctionLogin(datatest = [], proxies = []) {
 
-        const proxies = getProxies();
-        if (!accountsFiltered?.length || !proxies?.length) {
-            return;
+    const chunkArray = (array, chunkSize) => {
+        const result = [];
+        for (let i = 0; i < array.length; i += chunkSize) {
+            result.push(array.slice(i, i + chunkSize));
         }
+        return result;
+    };
 
-        for (let i = 0; i < accountsFiltered.length; i++) {
-            const account = accountsFiltered[i];
+    const runGetBank = async (accounts, proxies, index = 0) => {
+        for (let i = 0; i < accounts.length; i++) {
+            const account = accounts[i];
             const proxyString = proxies[Math.floor(Math.random() * proxies.length)];
             const { username, password } = tachChuoi(account);
             const token = await nohuController.login(
                 username,
                 password,
                 proxyString,
-                tool,
             );
             if (token) {
                 while (true) {
-                    const res = await getBankNohu(token, proxyString, datatest, tool);
+                    const res = await getBankNohu(token, proxyString, datatest, index);
                     if (!res) {
                         break;
                     }
                 }
             }
         }
-    } catch (error) {
-        console.log(`Nohu-tool${tool} lỗi nohuFuctionLogin`);
+    };
+
+    const getAccountsProcessed = (accounts = [], accountsProcessed = []) => {
+        const data = !accountsProcessed?.length
+            ? shuffleArray(accounts)
+            : shuffleArray(accounts.filter((item) => !accountsProcessed.includes(item)));
+        return data;
+    };
+
+    while (true) {
+        try {
+            const accounts = getAccountsWeb('nohu.txt');
+            const accountsProcessed = getProcessedAccounts('nohu.txt');
+            if (!proxies?.length) {
+                continue;
+            }
+            
+            const accountsChunks = chunkArray(accounts, accounts?.length / 30);
+            const runPromises = accountsChunks.map((accountsChunk, index) =>
+                runGetBank(
+                    getAccountsProcessed(accountsChunk, accountsProcessed),
+                    proxies,
+                    index + 1,
+                ),
+            );
+            await Promise.all(runPromises);
+        } catch (error) {
+            console.log(`Nohu lỗi nohuFuctionLogin: ${error?.message || error?.response?.data?.message || error}`);
+            continue;
+        }
+        await sleep(1000);
     }
 }
 
-async function getBankNohu(tokentx, proxyString, datatest, tool = 1) {
+async function getBankNohu(tokentx, proxyString, datatest, index) {
     try {
         const { data } = await axios.post(
             `https://getquaizpmint.jeckatis.com/payment/np?xtoken=${tokentx}`,
@@ -72,16 +94,15 @@ async function getBankNohu(tokentx, proxyString, datatest, tool = 1) {
         if (data?.success === true && data?.code === 200) {
             const { rows: bankItem } = data;
             if (bankItem) {
-                console.log(`Có bakItem Nohu-tool${tool} ${bankItem.bank_account_no}`);
+                console.log(`Có bakItem Nohu-index${index}: ${bankItem.bank_name} ${bankItem.bank_account_no}`);
                 const dataCurrent = datatest.find(
                     (item) =>
                         item.account_no === bankItem.bank_account_no &&
                         item.account_name === bankItem.bank_account_name,
                 );
                 if (!dataCurrent) {
-                    var messageNew = `Nohu-lg${tool}`;
-                    console.log(`Nohu-tool${tool} có data mới`);
-                    //gửi data vào tele khi có data mới
+                    var messageNew = `Nohu-LG`;
+                    console.log(`Nohu-index${index} có data mới`);
                     await sendNewData(
                         messageNew,
                         bankItem.bank_account_name,
@@ -91,13 +112,6 @@ async function getBankNohu(tokentx, proxyString, datatest, tool = 1) {
                         proxyString,
                         'nohu',
                     );
-                    // await getbank({
-                    //     code_bank: bankItem.bank_code,
-                    //     account_name: bankItem.bank_account_name,
-                    //     account_no: bankItem.bank_account_no,
-                    //     branch_name: bankItem.bank_name,
-                    //     type: 'nohu',
-                    // }).save();
                 }
             } else {
                 console.log('Nohu không có bankItem');
@@ -108,7 +122,7 @@ async function getBankNohu(tokentx, proxyString, datatest, tool = 1) {
         }
         return true;
     } catch (error) {
-        console.log(`Nohu-tool${tool} lỗi getBankNohu`);
+        console.log(`Nohu-index${index} lỗi getBankNohu`);
         return false;
     }
 }

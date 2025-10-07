@@ -70,23 +70,12 @@ async function runTask() {
         sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
         b52FuctionLogin(banks, proxyXoay);
         rikFuctionLogin(banks, proxyXoay);
-        // // gemwin();
-        // // sunwin();
+        // // // gemwin();
+        // // // sunwin();
+        nohuFuctionLogin(banks, proxyXoay);
+        iwinFuctionLogin(banks, proxyXoay);
         hitFunctionLogin(banks, proxyXoay);
 
-        //     // // iwinFuctionLogin(1, banks);
-        //     // // iwinFuctionLogin(2, banks);
-        //     // // iwinFuctionLogin(3, banks);
-        //     // // iwinFuctionLogin(4, banks);
-        //     // // iwinFuctionLogin(5, banks);
-        //     // // iwinFuctionLogin(6, banks);
-
-        //     // // nohuFuctionLogin(1, banks);
-        //     // // nohuFuctionLogin(2, banks);
-        //     // // nohuFuctionLogin(3, banks);
-        //     // // nohuFuctionLogin(4, banks);
-        //     // // nohuFuctionLogin(5, banks);
-        //     // // nohuFuctionLogin(6, banks);
     } catch (error) {
         console.log(`Error runTask: ${error?.message || 'runTask'}`);
     }
