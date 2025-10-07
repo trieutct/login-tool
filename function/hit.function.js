@@ -69,7 +69,7 @@ const GET_CAPTCHA_URL_API = process.env.GET_CAPTCHA_URL_API;
 
 //             let captchaText = '';
 //             try {
-//                 const res = await axios.post(GET_CAPTCHA_URL_API, {
+//                 const res = await axios.post(`${GET_CAPTCHA_URL_API}/upload`, {
 //                     image: b64,
 //                     message,
 //                 });
@@ -521,7 +521,7 @@ async function loginHit(username, password, proxyString) {
 
     let captchaText = '';
     try {
-        const res = await axios.post(GET_CAPTCHA_URL_API, {
+        const res = await axios.post(`${GET_CAPTCHA_URL_API}/upload`, {
             image: b64,
             message,
         });
