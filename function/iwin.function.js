@@ -67,7 +67,7 @@ async function iwinFuctionLogin(datatest = [], proxies = []) {
                     ),
                 );
     
-                await Promise.all(runPromises);
+                await Promise.allSettled(runPromises);
         } catch (error) {
             console.log(`PlayIwin lỗi iwinFuctionLogin: ${error?.message || error?.response?.data?.message || error}`);
             continue;

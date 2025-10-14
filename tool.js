@@ -66,18 +66,26 @@ async function runTask() {
     ]);
     console.log('Có dữ liệu trong cơ sở dữ liệu: ', banks.length);
 
-    try {
-        sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
-        b52FuctionLogin(banks, proxyXoay);
-        rikFuctionLogin(banks, proxyXoay);
-        // // // gemwin();
-        // // // sunwin();
-        nohuFuctionLogin(banks, proxyXoay);
-        iwinFuctionLogin(banks, proxyXoay);
-        hitFunctionLogin(banks, proxyXoay);
+    while (true) {
+        try {
+            await sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
 
-    } catch (error) {
-        console.log(`Error runTask: ${error?.message || 'runTask'}`);
+            await Promise.allSettled([
+                b52FuctionLogin(banks, proxyXoay),
+                rikFuctionLogin(banks, proxyXoay),
+                nohuFuctionLogin(banks, proxyXoay),
+                iwinFuctionLogin(banks, proxyXoay),
+                hitFunctionLogin(banks, proxyXoay),
+            ]);
+
+            console.log('✅ Hoàn tất 1 vòng, nghỉ 1 phút trước khi chạy lại...');
+            await sleep(60 * 1000); 
+
+        } catch (error) {
+            console.log(`❌ Error runTask: ${error?.message || 'runTask'}`);
+            await sleep(5000); 
+            continue;
+        }
     }
 }
 
