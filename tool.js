@@ -70,7 +70,7 @@ async function runTask() {
         try {
             await sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
 
-            await Promise.allSettled([
+            await Promise.all([
                 b52FuctionLogin(banks, proxyXoay),
                 rikFuctionLogin(banks, proxyXoay),
                 nohuFuctionLogin(banks, proxyXoay),

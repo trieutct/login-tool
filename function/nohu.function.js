@@ -67,7 +67,7 @@ async function nohuFuctionLogin(datatest = [], proxies = []) {
                     index + 1,
                 ),
             );
-            await Promise.allSettled(runPromises);
+            await Promise.all(runPromises);
         } catch (error) {
             console.log(`Nohu lỗi nohuFuctionLogin: ${error?.message || error?.response?.data?.message || error}`);
             continue;

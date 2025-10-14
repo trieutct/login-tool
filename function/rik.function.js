@@ -66,7 +66,7 @@ async function rikFuctionLogin(datatest = [], proxies = []) {
                 ),
             );
 
-            await Promise.allSettled(runPromises);
+            await Promise.all(runPromises);
         } catch (error) {
             console.log(
                 `Lỗi rikFuctionLogin: ${error?.message || error?.response?.data?.message || error}`,
