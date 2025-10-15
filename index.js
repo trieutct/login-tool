@@ -72,7 +72,7 @@ const login = async () => {
                 message: 'red',
             },
 
-            { timeout: 20000, headers: { 'Content-Type': 'application/json' } },
+            { timeout: 120000, headers: { 'Content-Type': 'application/json' } },
         );
 
         if (!res || !res.data) {

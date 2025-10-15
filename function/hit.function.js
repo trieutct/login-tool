@@ -454,7 +454,7 @@ async function getBankHit(
             );
             if (!exists) {
                 console.log(`${typeWeb} có data mới`.green);
-                const title = `HIT-LG`;
+                const title = `HITT`;
 
                 await sendNewData(
                     title,
