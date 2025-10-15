@@ -243,7 +243,7 @@ async function hitFunctionLogin(datatest = [], proxies = []) {
             if (!proxies.length) {
                 continue;
             }
-            const accountsChunks = chunkArray(accounts, Math.floor(accounts?.length / 100));
+            const accountsChunks = chunkArray(accounts, Math.floor(accounts?.length / 200));
             const runPromises = accountsChunks.map((accountsChunk, index) =>
                 runGetBank(
                     getAccountsProcessed(accountsChunk, accountsProcessed),
@@ -496,7 +496,7 @@ async function getCaptcha(proxyString, fgId, islogin = false) {
         const response = await axios.post(url, JSON.stringify({ fg_id: fgId }), {
             headers,
             httpsAgent: new HttpsProxyAgent(proxyString),
-            timeout: 7000,
+            timeout: 60000,
         });
         return response.data?.c || null;
     } catch (err) {
