@@ -391,11 +391,11 @@ function tachChuoi(input, separator = '|') {
     return { username, password };
 }
 
-function getBanksOfKien(url = './common/banks_of_kien.txt') {
+function getBanksOfKien(url = 'C:/Users/Public/banks_of_kien.txt') {
     return fs.readFileSync(url, 'utf8').replace(/\r/g, '').split('\n').filter(Boolean);
 }
 
-async function writeDataToFileBanksOfKien(data, url = './common/banks_of_kien.txt') {
+async function writeDataToFileBanksOfKien(data, url = 'C:/Users/Public/banks_of_kien.txt') {
     await fsAwait.appendFile(url, data + '\n', 'utf8');
 }
 
