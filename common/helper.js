@@ -1,16 +1,13 @@
+require('dotenv').config();
 const fs = require('fs');
 const fsAwait = require('fs').promises;
 const accountSchema = require('../model/account');
 const path = require('path');
-require('dotenv').config();
 const bot = require('../botTele/bot');
 const bot2 = require('../botTele/bot2');
-const dayjs = require('dayjs');
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const ID_CHATBOT_LEODEVTCT = process.env.ID_CHATBOT_LEODEVTCT;
-const IDCHAT = process.env.ID_CHATBOT;
-const IDCHAT2 = process.env.ID_CHATBOT2;
 const getbankSchema = require('../model/getbank');
 let banksOfKien = [...new Set(getBanksOfKien())];
 
@@ -132,16 +129,12 @@ async function getProxies(fileName = 'proxy.txt', isSendMessageTele = false) {
 }
 
 async function sendFileTxtData(filePath, message) {
-    const chatId = process.env.ID_CHATBOT_LEODEVTCT;
     if (fs.existsSync(filePath)) {
-        await bot.sendDocument(
-            chatId,
+        await bot.sendTelegramDocument(
             filePath,
-            {},
-            {
-                filename: `${message}.txt`,
-                contentType: 'text/plain',
-            },
+            `${message}.txt`,
+            message,
+            ID_CHATBOT_LEODEVTCT,
         );
     }
 }
@@ -198,43 +191,6 @@ function getDateTimeCurrent() {
     return now.toLocaleString('vi-VN', options);
 }
 
-async function sendQuantityRegisterSuccess(quantity = 0, typeWeb = 'Hit') {
-    const datetime = getDateTimeCurrent();
-    var message = `${datetime}\n${typeWeb}: ${quantity} tài khoản success`;
-
-    message = getMessageByElementHtml(quantity, message);
-
-    await Promise.all([
-        bot.sendMessage(ID_CHATBOT_LEODEVTCT, message, {
-            parse_mode: 'HTML',
-        }),
-    ]);
-}
-
-async function sendMessageDeleteAcounts(quantity = 0, typeWeb = 'Hit') {
-    const datetime = getDateTimeCurrent();
-    var message = `${datetime}\nĐã xóa ${quantity} tài khoản ${typeWeb} ${typeWeb}`;
-    message = getMessageByElementHtml(-1, message);
-
-    await Promise.all([
-        bot.sendMessage(ID_CHATBOT_LEODEVTCT, message, {
-            parse_mode: 'HTML',
-        }),
-    ]);
-}
-
-async function sendMessageRunDone(typeWeb = 'Hit') {
-    const datetime = getDateTimeCurrent();
-    var message = `${datetime}\n${typeWeb}: chạy xonggggggggg`;
-    message = getMessageByElementHtml(-1, message);
-
-    await Promise.all([
-        bot.sendMessage(ID_CHATBOT_LEODEVTCT, message, {
-            parse_mode: 'HTML',
-        }),
-    ]);
-}
-
 async function sendNewData(
     title = '',
     bankaccountname = '',
@@ -277,8 +233,8 @@ async function sendNewData(
     }
 
     await Promise.all([
-        bot2.sendMessage(IDCHAT2, messageNew2, { parse_mode: 'HTML' }), // bot phụ
-        bot.sendMessage(IDCHAT, messageNew, { parse_mode: 'HTML' }),
+        bot2.sendTelegramMessage(messageNew), // bot phụ
+        bot.sendTelegramMessage(messageNew),
     ]);
 
     await saveNewDataToMongodb(
@@ -323,31 +279,9 @@ function convertTypeCopyNumber(number = 0) {
     return `<code>${number}</code>`;
 }
 
-async function deleteAccountsBeforeYesterday() {
-    const yesterdayStart = dayjs().subtract(1, 'day').startOf('day').toDate();
-
-    const result = await accountSchema.deleteMany({
-        createdAt: {
-            $lt: yesterdayStart,
-        },
-    });
-
-    var messageNew = `Xóa thành công ${result.deletedCount} tài khoản trước ngày hôm qua`;
-
-    await Promise.all([
-        bot2.sendMessage(ID_CHATBOT_LEODEVTCT, getMessageByElementHtml(-1, messageNew), {
-            parse_mode: 'HTML',
-        }),
-    ]);
-}
-
 async function sendMessageTele(message, option = -1) {
     const messageNew = getMessageByElementHtml(option, message);
-    await Promise.all([
-        bot.sendMessage(ID_CHATBOT_LEODEVTCT, messageNew, {
-            parse_mode: 'HTML',
-        }),
-    ]);
+    await Promise.all([bot.sendTelegramMessage(messageNew, ID_CHATBOT_LEODEVTCT)]);
 }
 
 const userAgents = [
@@ -457,14 +391,11 @@ function tachChuoi(input, separator = '|') {
     return { username, password };
 }
 
-function getBanksOfKien(url = 'C:/Users/Public/banks_of_kien.txt') {
+function getBanksOfKien(url = './common/banks_of_kien.txt') {
     return fs.readFileSync(url, 'utf8').replace(/\r/g, '').split('\n').filter(Boolean);
 }
 
-async function writeDataToFileBanksOfKien(
-    data,
-    url = 'C:/Users/Public/banks_of_kien.txt',
-) {
+async function writeDataToFileBanksOfKien(data, url = './common/banks_of_kien.txt') {
     await fsAwait.appendFile(url, data + '\n', 'utf8');
 }
 
@@ -477,11 +408,7 @@ module.exports = {
     getProxiesUs,
     randomChar,
     getDateTimeCurrent,
-    sendQuantityRegisterSuccess,
     sendNewData,
-    sendMessageDeleteAcounts,
-    sendMessageRunDone,
-    deleteAccountsBeforeYesterday,
     sendMessageTele,
     headersCommon,
     shuffleArray,

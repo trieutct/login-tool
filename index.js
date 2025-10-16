@@ -5,7 +5,7 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
 // theo bản của app1 thì là 305s
 
 // const GET_CAPTCHA_URL_API = 'http://157.66.47.38:5001';//36s
-const GET_CAPTCHA_URL_API = 'http://157.66.47.38:5000'; //117s
+const GET_CAPTCHA_URL_API = 'http://160.191.87.227:5000'; //117s
 
 const warn = (...args) => console.warn(...args);
 const error = (...args) => console.error(...args);
@@ -32,7 +32,7 @@ const login = async () => {
 };
 
 (async () => {
-    const tasks = Array.from({ length: 5 }, (_, i) => (async () => {
+    const tasks = Array.from({ length: 100 }, (_, i) => (async () => {
         const id = uuidv4();
         const start = performance.now();
         const result = await login();

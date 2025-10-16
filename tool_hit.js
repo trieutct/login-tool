@@ -9,11 +9,8 @@ const {
     sendMessageTele,
     getDateTimeCurrent,
 } = require('./common/helper');
-const { b52FuctionLogin } = require('./function/b52.function');
-const { rikFuctionLogin } = require('./function/rik.function.js');
-const { iwinFuctionLogin } = require('./function/iwin.function.js');
-const { nohuFuctionLogin } = require('./function/nohu.function.js');
 const getbank = require('./model/getbank.js');
+const { hitFunctionLogin } = require('./function/hit.function.js');
 
 async function connectWithRetry(maxRetries = 5, delay = 3000) {
     let connected = false;
@@ -61,14 +58,8 @@ async function runTask() {
 
     while (true) {
         try {
-            await sendMessageTele('🟢 Start chạy app: ' + getDateTimeCurrent(), 1);
-
-            await Promise.all([
-                b52FuctionLogin(banks, proxyXoay),
-                rikFuctionLogin(banks, proxyXoay),
-                nohuFuctionLogin(banks, proxyXoay),
-                iwinFuctionLogin(banks, proxyXoay),
-            ]);
+            await sendMessageTele('🟢 Start chạy app HIT: ' + getDateTimeCurrent(), 1);
+            await hitFunctionLogin(banks, proxyXoay);
             console.log('✅ Hoàn tất 1 vòng, nghỉ 1 phút trước khi chạy lại...');
             await sleep(5 * 1000);
         } catch (error) {
