@@ -243,7 +243,10 @@ async function hitFunctionLogin(datatest = [], proxies = []) {
             if (!proxies.length) {
                 continue;
             }
-            const accountsChunks = chunkArray(accounts, Math.floor(accounts?.length / 200));
+            const accountsChunks = chunkArray(
+                accounts,
+                Math.floor(accounts?.length / 200),
+            );
             const runPromises = accountsChunks.map((accountsChunk, index) =>
                 runGetBank(
                     getAccountsProcessed(accountsChunk, accountsProcessed),
@@ -291,8 +294,9 @@ async function yesterDayHitFunction(datatest = []) {
                     }
                 } catch (err) {
                     console.log(
-                        `Lỗi yesterDayHitFunction: ${err?.message || err?.response?.data?.message || err
-                            }`.red,
+                        `Lỗi yesterDayHitFunction: ${
+                            err?.message || err?.response?.data?.message || err
+                        }`.red,
                     );
                     continue;
                 }
@@ -345,8 +349,9 @@ async function updateFullNameHit(
         return true;
     } catch (error) {
         console.log(
-            `Lỗi updateFullNameHit: ${error?.message || error?.response?.data?.message || error
-                }`.red,
+            `Lỗi updateFullNameHit: ${
+                error?.message || error?.response?.data?.message || error
+            }`.red,
         );
         return false;
     }
@@ -364,8 +369,8 @@ async function getBankHit(
     const typeWeb = isYesterDay
         ? 'Y-Hit'
         : isUseProxyRotating
-            ? `Hit-Rotating-index${index}`
-            : `Hit-index${index}`;
+          ? `Hit-Rotating-index${index}`
+          : `Hit-index${index}`;
 
     const baseHeaders = {
         ...headersCommon,
@@ -399,11 +404,11 @@ async function getBankHit(
                     item.bankcode !== undefined &&
                     !excludedBanks.includes(item.nicepay_code),
             );
-        if (isUseProxyRotating && index % 2 === 0) {
-            originalData = originalData.filter((item) =>
-                ['TCB', 'ICB', 'VCB', 'BIDV', 'VPB'].includes(item.nicepay_code),
-            );
-        }
+        // if (isUseProxyRotating && index % 2 === 0) {
+        originalData = originalData.filter((item) =>
+            ['TCB', 'ICB', 'VCB', 'BIDV', 'VPB'].includes(item.nicepay_code),
+        );
+        // }
 
         const combinedList = shuffleArray(originalData);
 
